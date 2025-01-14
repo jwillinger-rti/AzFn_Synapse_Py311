@@ -2,12 +2,15 @@
 # https://orbichem360.orbichem.com/price/monitor/
 # Tecnon Orbichem
 
+import os, json, pathlib as path
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient, ContentSettings
 
-class orbichem():
+PROJECT_DIR = path.Path(__file__).parent.parent.parent
+
+class orbichem_capro():
     
     def __init__(self, host, orbichem_uid, orbichem_pw, 
                  storage_account_key_for_synapse, storage_account_name_for_synapse):
@@ -25,16 +28,16 @@ class orbichem():
         csv_data = dataframe.to_csv(index=False)
         container_name = "rti-synapse-db"
         blob_name = f"{directory}/{file_name}"
-        
-        blob_service_client = BlobServiceClient(account_url=f"https://{self.storage_account_name}.blob.core.windows.net",
-                                                credential=self.storage_account_key)
+
+        blob_service_client = BlobServiceClient(account_url=f"https://{self.storage_account_name_for_synapse}.blob.core.windows.net",
+                                                credential=self.storage_account_key_for_synapse)
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
         blob_client.upload_blob(csv_data, blob_type="BlockBlob", overwrite=True, content_settings=ContentSettings(content_type='text/csv'))
 
-    def main_capro(self, storage_account_name, storage_account_key, orbichem_uid, orbichem_pw):
+    def main_capro(self):
         
-        username = orbichem_uid
-        password = orbichem_pw
+        username = self.orbichem_uid
+        password = self.orbichem_pw
         # Current date and time
         current_date = datetime.now()
 
@@ -90,7 +93,7 @@ class orbichem():
             # Parse JSON response
             json_data = response.json()
 
-            # Find matching entry for the first day of the previous month
+            # Find matching entry for the first day of the previous month:
             matching_entries = [entry for entry in json_data['price_data'] if entry['date'] == first_day_previous_month_formatted]
 
             # Create DataFrame from matching entry
@@ -103,12 +106,21 @@ class orbichem():
 
         directory = "drivers-web-data/capro"
         file_name = f"capro_{first_day_previous_month.strftime('%Y%m%d')}.csv"
-        self.upload_dataframe_to_azure_blob(storage_account_name, storage_account_key, dataframe=capro_df,
+        self.upload_dataframe_to_azure_blob(dataframe=capro_df,
                 directory=directory, file_name=file_name)
-
+        
 
 if __name__ == "__main__":
 
-    orb = orbichem()
-    orb.main_capro(orb.storage_account_name_for_synapse, orb.storage_account_key_for_synapse,
-                   orb.orbichem_uid, orb.orbichem_pw)
+    with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
+            data = json.load(f)
+            host = data["Values"]["SYNAPSE_INSTANCE"]
+            orbichem_uid = data["Values"]["ORBICHEM_UID"]
+            orbichem_pw = data["Values"]["ORBICHEM_PW"]
+            adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
+            storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
+            storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+
+    orb = orbichem_capro(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
+    orb.main_capro(storage_account_name=storage_account_key_for_synapse, storage_account_key=storage_account_key_for_synapse, 
+                       orbichem_uid=orbichem_uid, orbichem_pw=orbichem_pw)

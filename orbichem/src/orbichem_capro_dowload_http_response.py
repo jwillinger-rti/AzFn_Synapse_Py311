@@ -53,7 +53,7 @@ def upload_log_to_blob(logger, temp_file_name, adls_conn_string):
             new_content = existing_content + temp_file.read()
         blob_client.upload_blob(data=new_content, overwrite=True)
 
-def capro_download_http_reponse():
+def orbichem_capro_dowload_http_response():
     func_name = inspect.currentframe().f_code.co_name
     logger, temp_file_name = get_and_config_logger(func_name)
     
@@ -74,13 +74,12 @@ def capro_download_http_reponse():
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
         storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
         storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-
+    
     try:
-        # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
-        # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
+    # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
+    # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
         orb = pull_orbichem.orbichem(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
-        orb.main_capro(storage_account_name=storage_account_key_for_synapse, storage_account_key=storage_account_key_for_synapse, 
-                       orbichem_uid=orbichem_uid, orbichem_pw=orbichem_pw)
+        orb.main_capro()
     
     except Exception as e:
         logger.error(e)
@@ -95,4 +94,4 @@ def capro_download_http_reponse():
     return b_success
 
 if __name__ == "__main__":
-    capro_download_http_reponse()
+    orbichem_capro_dowload_http_response()
