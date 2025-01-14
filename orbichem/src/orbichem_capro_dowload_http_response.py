@@ -74,11 +74,11 @@ def orbichem_capro_dowload_http_response():
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
         storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
         storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-    
+
     try:
     # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
     # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        orb = pull_orbichem.orbichem(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
+        orb = pull_orbichem.orbichem_capro(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
         orb.main_capro()
     
     except Exception as e:

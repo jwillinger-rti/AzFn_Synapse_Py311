@@ -81,4 +81,3 @@ def orbichem_capro_dowload_http_response(req: func.HttpRequest) -> func.HttpResp
              "This HTTP triggered function executed successfully. No body received.",
              status_code=200
         )
-    
