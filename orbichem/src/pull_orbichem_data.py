@@ -36,6 +36,7 @@ class orbichem_capro():
 
     def main_capro(self):
         
+        print("Executing")
         username = self.orbichem_uid
         password = self.orbichem_pw
         # Current date and time
