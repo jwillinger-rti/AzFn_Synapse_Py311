@@ -56,7 +56,7 @@ def eia_dowload_http_response(req: func.HttpRequest) -> func.HttpResponse:
              "This HTTP triggered function executed successfully. No body received.",
              status_code=200
         )
-    
+
 # ORB - Capro:
 @app.route(route="orbichem_capro_dowload_http_response")
 def orbichem_capro_dowload_http_response(req: func.HttpRequest) -> func.HttpResponse:
