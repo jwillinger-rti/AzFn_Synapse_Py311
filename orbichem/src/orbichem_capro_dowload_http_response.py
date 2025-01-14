@@ -66,14 +66,14 @@ def orbichem_capro_dowload_http_response():
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
             storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
             storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-    
+
     except FileNotFoundError or FileNotFoundError or KeyError:
         host = os.environ["SYNAPSE_INSTANCE"]
         orbichem_uid = os.environ["ORBICHEM_UID"]
         orbichem_pw = os.environ["ORBICHEM_PW"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-        storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-        storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+        storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
+        storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
 
     try:
     # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
