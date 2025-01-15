@@ -10,4 +10,5 @@ pyodbc
 sqlalchemy
 azure-identity
 azure-storage-blob
+bs4
 

@@ -7,8 +7,7 @@ import pathlib as path
 import inspect, json
 import datetime, tempfile
 try: import orbichem.src.pull_orbichem_data as pull_orbichem
-except ModuleNotFoundError: import pull_orbichem_data as pull_orbichem
-
+except ModuleNotFoundError: import pull_acc_data as pull_acc
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
@@ -53,33 +52,38 @@ def upload_log_to_blob(logger, temp_file_name, adls_conn_string):
             new_content = existing_content + temp_file.read()
         blob_client.upload_blob(data=new_content, overwrite=True)
 
-def orbichem_capro_download_http_response():
+def acc_download_http_response():
+    
     func_name = inspect.currentframe().f_code.co_name
     logger, temp_file_name = get_and_config_logger(func_name)
     
     try:
         with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
-            host = data["Values"]["SYNAPSE_INSTANCE"]
-            orbichem_uid = data["Values"]["ORBICHEM_UID"]
-            orbichem_pw = data["Values"]["ORBICHEM_PW"]
+            acc_uid = data["Values"]["ACC_UID"]
+            acc_pw = data["Values"]["ACC_PW"]
+            acc_login_url= data["Values"]["ACC_LOGIN_URL"]
+            acc_main_url= data["Values"]["ACC_MAIN_URL"]
+            acc_download_url= data["Values"]["ACC_DOWNLOAD_URL"]
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
             storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
             storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
 
     except FileNotFoundError or FileNotFoundError or KeyError:
-        host = os.environ["SYNAPSE_INSTANCE"]
-        orbichem_uid = os.environ["ORBICHEM_UID"]
-        orbichem_pw = os.environ["ORBICHEM_PW"]
+        acc_uid = os.environ["ACC_UID"]
+        acc_pw = os.environ["ACC_PW"]
+        acc_login_url= os.environ["ACC_LOGIN_URL"]
+        acc_main_url= os.environ["ACC_MAIN_URL"]
+        acc_download_url= os.environ["ACC_DOWNLOAD_URL"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
         storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
         storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-
+    
     try:
     # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
     # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        orb = pull_orbichem.orbichem_capro(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
-        orb.main_capro()
+        orb = pull_acc.acc(acc_uid, acc_pw, acc_login_url, acc_main_url, acc_download_url, storage_account_key_for_synapse, storage_account_name_for_synapse)
+        orb.main_acc()
     
     except Exception as e:
         logger.error(e)
@@ -94,4 +98,4 @@ def orbichem_capro_download_http_response():
     return b_success
 
 if __name__ == "__main__":
-    orbichem_capro_download_http_response()
+    acc_download_http_response()
