@@ -61,7 +61,7 @@ def cme_download_http_reponse():
             data = json.load(f)
             host = data["Values"]["SYNAPSE_INSTANCE"]
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-    except FileNotFoundError or FileNotFoundError or KeyError:
+    except FileNotFoundError or KeyError:
         host = os.environ["SYNAPSE_INSTANCE"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
 

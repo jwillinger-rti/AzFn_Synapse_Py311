@@ -59,7 +59,7 @@ def acc_download_http_response():
         with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-    except FileNotFoundError or FileNotFoundError or KeyError:
+    except FileNotFoundError or KeyError:
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
 
     try:

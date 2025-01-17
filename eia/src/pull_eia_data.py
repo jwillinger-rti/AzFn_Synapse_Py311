@@ -45,7 +45,7 @@ class eiaapi():
                 data = json.load(f)
                 kv_env = data["Values"]["KEYVAULT_ENV"]
                 b_is_local = data["Values"]["IS_RUNNING_LOCALLY"]
-        except FileNotFoundError or FileNotFoundError or KeyError:
+        except FileNotFoundError or KeyError:
             kv_env = os.environ["KEYVAULT_ENV"]
             b_is_local = os.environ["IS_RUNNING_LOCALLY"]
         

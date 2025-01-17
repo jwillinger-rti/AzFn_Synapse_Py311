@@ -23,7 +23,7 @@ class orbichem_capro():
                 storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
                 storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
                 b_is_local = data["Values"]["IS_RUNNING_LOCALLY"]
-        except FileNotFoundError or FileNotFoundError or KeyError:
+        except FileNotFoundError or KeyError:
             kv_env = os.environ["KEYVAULT_ENV"]
             storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
             storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
