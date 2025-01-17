@@ -1,10 +1,10 @@
 from azure.storage.blob import BlobServiceClient
 from azure.storage.blob import ContentSettings
-import logging, os, sys
+import logging, os
 import pathlib as path
 import inspect, json
 import datetime, tempfile
-try: import orbichem.src.pull_orbichem_data as pull_orbichem
+try: import acc.src.pull_acc_data as pull_acc
 except ModuleNotFoundError: import pull_acc_data as pull_acc
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent

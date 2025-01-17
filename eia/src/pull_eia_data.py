@@ -31,6 +31,7 @@ except ModuleNotFoundError: import azsynapse as azsyn
 YUP = "YUP"
 YRL = "YRL"
 GINP = "EPXXX2"
+PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
 class eiaapi():
 
@@ -248,7 +249,7 @@ class eiaapi():
         self.upload_eia_data(host=self.host, df=self.get_data())
 
 if __name__ == "__main__":
-    PROJECT_DIR = path.Path(__file__).parent.parent.parent
+
     with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
         data = json.load(f)
         host = data["Values"]["SYNAPSE_INSTANCE"]
