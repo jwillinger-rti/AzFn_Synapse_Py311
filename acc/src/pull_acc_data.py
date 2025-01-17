@@ -32,10 +32,10 @@ class acc():
             storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
             b_is_local = os.environ["IS_RUNNING_LOCALLY"]
 
-        if b_is_local:
+        if b_is_local == True:
             az_credential = azure.identity.AzureCliCredential()
         else: 
-            az_credential = azure.identity.DefaultAzureCredential()
+            az_credential = azure.identity.ManagedIdentityCredential()
         secret_client = SecretClient(vault_url=f"https://rti-rspaciq-kv{kv_env}.vault.azure.net",
                                         credential=az_credential)
         username = secret_client.get_secret("ACC-scrape-uid")
