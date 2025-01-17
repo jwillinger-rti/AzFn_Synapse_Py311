@@ -28,8 +28,8 @@ class orbichem_capro():
             storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
             storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
             b_is_local = os.environ["IS_RUNNING_LOCALLY"]
-
-        if b_is_local:
+        
+        if b_is_local == True:
             az_credential = azure.identity.AzureCliCredential()
         else: 
             az_credential = azure.identity.DefaultAzureCredential()
@@ -128,7 +128,6 @@ class orbichem_capro():
                 capro_df = capro_df.rename(columns={'date': 'price_date'})
                 # capro_df['load_date'] = today
 
-
         directory = "drivers-web-data/capro"
         file_name = f"capro_{first_day_previous_month.strftime('%Y%m%d')}.csv"
         self.upload_dataframe_to_azure_blob(dataframe=capro_df,
@@ -137,7 +136,7 @@ class orbichem_capro():
 
 if __name__ == "__main__":
 
-    with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
+    with open(os.path.join(PROJECT_DIR, "local.settings.json")) as f:
             data = json.load(f)
             host = data["Values"]["SYNAPSE_INSTANCE"]
 
