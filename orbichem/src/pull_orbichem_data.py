@@ -7,13 +7,37 @@ import requests
 import pandas as pd
 from datetime import datetime, timedelta
 from azure.storage.blob import BlobServiceClient, ContentSettings
+import azure.identity
+from azure.keyvault.secrets import SecretClient
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
 class orbichem_capro():
     
-    def __init__(self, host, orbichem_uid, orbichem_pw, 
-                 storage_account_key_for_synapse, storage_account_name_for_synapse):
+    def __init__(self, host):
+        
+        try:
+            with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
+                data = json.load(f)
+                kv_env = data["Values"]["KEYVAULT_ENV"]
+                storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
+                storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+                b_is_local = data["Values"]["IS_RUNNING_LOCALLY"]
+        except FileNotFoundError or FileNotFoundError or KeyError:
+            kv_env = os.environ["KEYVAULT_ENV"]
+            storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
+            storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+            b_is_local = os.environ["IS_RUNNING_LOCALLY"]
+
+        if b_is_local:
+            az_credential = azure.identity.AzureCliCredential()
+        else: 
+            az_credential = azure.identity.DefaultAzureCredential()
+        secret_client = SecretClient(vault_url=f"https://rti-rspaciq-kv{kv_env}.vault.azure.net",
+                                        credential=az_credential)
+        orbichem_uid = secret_client.get_secret("ORBICHEM-UID")
+        orbichem_pw = secret_client.get_secret("ORBICHEM-PW")
+
         # URLs
         self.capro_login_url = "https://orbichem360.orbichem.com/auth/signin?from_page=/"
         self.capro_url = "https://orbichem360.orbichem.com/price/monitor/get_price_data"
@@ -37,8 +61,8 @@ class orbichem_capro():
     def main_capro(self):
         
         print("Executing")
-        username = self.orbichem_uid
-        password = self.orbichem_pw
+        username = self.orbichem_uid.value
+        password = self.orbichem_pw.value
         # Current date and time
         current_date = datetime.now()
 
@@ -90,7 +114,7 @@ class orbichem_capro():
             # Send POST request to fetch data
             response = session.post(self.capro_url, headers=headers, data=data)
             response.raise_for_status()  # Raise an error for bad response status codes
-
+            
             # Parse JSON response
             json_data = response.json()
 
@@ -116,12 +140,6 @@ if __name__ == "__main__":
     with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
             host = data["Values"]["SYNAPSE_INSTANCE"]
-            orbichem_uid = data["Values"]["ORBICHEM_UID"]
-            orbichem_pw = data["Values"]["ORBICHEM_PW"]
-            adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-            storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-            storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
 
-    orb = orbichem_capro(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
-    orb.main_capro(storage_account_name=storage_account_key_for_synapse, storage_account_key=storage_account_key_for_synapse, 
-                       orbichem_uid=orbichem_uid, orbichem_pw=orbichem_pw)
+    orb = orbichem_capro(host)
+    orb.main_capro()

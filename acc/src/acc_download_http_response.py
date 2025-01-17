@@ -1,7 +1,5 @@
 from azure.storage.blob import BlobServiceClient
 from azure.storage.blob import ContentSettings
-from azure.identity import DefaultAzureCredential
-from azure.core import exceptions
 import logging, os, sys
 import pathlib as path
 import inspect, json
@@ -60,29 +58,12 @@ def acc_download_http_response():
     try:
         with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
-            acc_uid = data["Values"]["ACC_UID"]
-            acc_pw = data["Values"]["ACC_PW"]
-            acc_login_url= data["Values"]["ACC_LOGIN_URL"]
-            acc_main_url= data["Values"]["ACC_MAIN_URL"]
-            acc_download_url= data["Values"]["ACC_DOWNLOAD_URL"]
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-            storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-            storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-
     except FileNotFoundError or FileNotFoundError or KeyError:
-        acc_uid = os.environ["ACC_UID"]
-        acc_pw = os.environ["ACC_PW"]
-        acc_login_url= os.environ["ACC_LOGIN_URL"]
-        acc_main_url= os.environ["ACC_MAIN_URL"]
-        acc_download_url= os.environ["ACC_DOWNLOAD_URL"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-        storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-        storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-    
+
     try:
-    # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
-    # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        orb = pull_acc.acc(acc_uid, acc_pw, acc_login_url, acc_main_url, acc_download_url, storage_account_key_for_synapse, storage_account_name_for_synapse)
+        orb = pull_acc.acc()
         orb.main_acc()
     
     except Exception as e:

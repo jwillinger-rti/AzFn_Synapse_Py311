@@ -1,7 +1,5 @@
 from azure.storage.blob import BlobServiceClient
 from azure.storage.blob import ContentSettings
-from azure.identity import DefaultAzureCredential
-from azure.core import exceptions
 import logging, os, sys
 import pathlib as path
 import inspect, json
@@ -60,17 +58,15 @@ def eia_download_http_reponse():
         with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
             host = data["Values"]["SYNAPSE_INSTANCE"]
-            eia_key = data["Values"]["EIA_API_KEY"]
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
     except FileNotFoundError or FileNotFoundError or KeyError:
         host = os.environ["SYNAPSE_INSTANCE"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-        eia_key = os.environ["EIA_API_KEY"]
 
     try:
         # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
         # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        eia = pull_eia.eiaapi(host, eia_key)
+        eia = pull_eia.eiaapi(host)
         eia.main()
     except Exception as e:
         logger.error(e)

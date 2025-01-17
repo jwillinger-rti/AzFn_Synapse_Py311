@@ -1,25 +1,56 @@
 import os, datetime, pathlib as path
-import subprocess, json
+import tempfile, json
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 from azure.storage.blob import BlobServiceClient
+import azure.identity
+from azure.keyvault.secrets import SecretClient
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
 class acc():
 
-    def __init__(self, username, password, login_url, main_url, download_url,
-                 storage_account_name_for_synapse, storage_account_key_for_synapse):
+    def __init__(self):
         
+        try:
+            with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
+                data = json.load(f)
+                kv_env = data["Values"]["KEYVAULT_ENV"]
+                acc_login_url = data["Values"]["ACC_LOGIN_URL"]
+                acc_main_url = data["Values"]["ACC_MAIN_URL"]
+                acc_download_url = data["Values"]["ACC_DOWNLOAD_URL"]
+                storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
+                storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+                b_is_local = data["Values"]["IS_RUNNING_LOCALLY"]
+        except FileNotFoundError or FileNotFoundError or KeyError:
+            kv_env = os.environ["KEYVAULT_ENV"]
+            acc_login_url = os.environ["ACC_LOGIN_URL"]
+            acc_main_url = os.environ["ACC_MAIN_URL"]
+            acc_download_url = os.environ["ACC_DOWNLOAD_URL"]
+            storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
+            storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+            b_is_local = os.environ["IS_RUNNING_LOCALLY"]
+
+        if b_is_local:
+            az_credential = azure.identity.AzureCliCredential()
+        else: 
+            az_credential = azure.identity.DefaultAzureCredential()
+        secret_client = SecretClient(vault_url=f"https://rti-rspaciq-kv{kv_env}.vault.azure.net",
+                                        credential=az_credential)
+        username = secret_client.get_secret("ACC-scrape-uid")
+        password = secret_client.get_secret("ACC-scrape-pwd")
+
         # URLs and credentials
-        self.login_url = login_url
-        self.main_url = main_url
-        self.download_url = download_url
+        self.login_url = acc_login_url
+        self.main_url = acc_main_url
+        self.download_url = acc_download_url
+        self.keyvault_env = kv_env
         self.username = username
         self.password = password
         self.storage_account_name_for_synapse = storage_account_name_for_synapse
         self.storage_account_key_for_synapse = storage_account_key_for_synapse
+        self.is_local = b_is_local
 
     def read_from_blob(self, where_from, what='json'):
         container_name = 'rti-synapse-db'
@@ -30,7 +61,6 @@ class acc():
         blob_client = container_client.get_blob_client(where_from)
         blob_data = blob_client.download_blob().readall()
         return json.loads(blob_data)
-    
 
     def write_to_blob(self, where_to_write, what_to_write):
         container_name = 'rti-synapse-db'
@@ -87,7 +117,7 @@ class acc():
             'PVC Inventory',
             'PVC Capacity',
         ]
-
+        
         blob_name = 'monthlies-web-data/json/data.json'
         data=self.read_from_blob(blob_name, 'json')
         
@@ -181,8 +211,8 @@ class acc():
         # Prepare data payload for login
         data = {
             "__RequestVerificationToken": request_verification_token,
-            "Item.Username": self.username,
-            "Item.Password": self.password
+            "Item.Username": self.username.value,
+            "Item.Password": self.password.value
         }
 
         # POST request to login
@@ -220,7 +250,7 @@ class acc():
         
         blob_name = 'monthlies-web-data/json/data.json'
         self.write_to_blob(blob_name, text)
-        self.get_payloads4() # Execute
+        self.get_payloads4() # Execute, is there any purpose to this?
         
         # After login, send POST request to download URL
         download_headers = {
@@ -251,7 +281,8 @@ class acc():
         # Azure Blob Storage credentials
         container_name = 'rti-synapse-db'
         directory_name = 'ACC'
-        blob_service_client = BlobServiceClient(account_url=self.storage_account_name_for_synapse, credential=self.storage_account_key_for_synapse)
+        account_url = f"https://{self.storage_account_name_for_synapse}.blob.core.windows.net/"
+        blob_service_client = BlobServiceClient(account_url=account_url, credential=self.storage_account_key_for_synapse)
         container_client = blob_service_client.get_container_client(container_name)
 
         for item in payloads:
@@ -277,25 +308,28 @@ class acc():
             blob_client.upload_blob(file_response.content, overwrite=True)
 
             # Download the Excel file from Blob Storage
-            with open('/tmp/output.xlsx', 'wb') as file:
+            with tempfile.NamedTemporaryFile(prefix="acc_scrape_output", suffix=".xlsx", mode='a', delete=False) as temp_file:
+                temp_file_name = temp_file.name
+            with open(temp_file_name , 'wb') as file:
                 download_stream = blob_client.download_blob()
                 file.write(download_stream.readall())
 
             # Read the Excel file into a DataFrame
-            df = pd.read_excel('/tmp/output.xlsx')
+            df = pd.read_excel(temp_file_name)
             # print(df)
             # Construct the CSV file name based on item['name']
-            csv_filename = f"{item['name']}.csv"
-            local_csv_path = f"/tmp/{csv_filename}"
+            csv_filename = f"{item['name']}"
+            with tempfile.NamedTemporaryFile(prefix=csv_filename, suffix=".csv", mode='a', delete=False) as temp_file:
+                tempcsv_file_name = temp_file.name
 
             # Save the DataFrame as a CSV file locally
-            df.to_csv(local_csv_path, index=False)
+            df.to_csv(tempcsv_file_name, index=False)
 
             # Upload the CSV file to the specified directory in Blob Storage
             csv_blob_name = f"{directory_name}/{csv_filename}"
             csv_blob_client = container_client.get_blob_client(csv_blob_name)
 
-            with open(local_csv_path, "rb") as data:
+            with open(tempcsv_file_name, "rb") as data:
                 csv_blob_client.upload_blob(data, overwrite=True)
     
     def main_acc(self): 
@@ -303,18 +337,5 @@ class acc():
 
 
 if __name__ == "__main__":
-    try:
-        with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
-            data = json.load(f)
-            acc_uid = data["Values"]["ACC_UID"]
-            acc_pw = data["Values"]["ACC_PW"]
-            acc_login_url= data["Values"]["ACC_LOGIN_URL"]
-            acc_main_url= data["Values"]["ACC_MAIN_URL"]
-            acc_download_url= data["Values"]["ACC_DOWNLOAD_URL"]
-            adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-            storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-            storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-            acc(acc_uid, acc_pw, acc_login_url, acc_main_url, acc_download_url,
-                 storage_account_name_for_synapse, storage_account_key_for_synapse).main_acc()
-    except:
-        pass
+
+    acc().main_acc()

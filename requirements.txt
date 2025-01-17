@@ -10,5 +10,7 @@ pyodbc
 sqlalchemy
 azure-identity
 azure-storage-blob
+azure-keyvault-secrets
 bs4
+xlrd
 

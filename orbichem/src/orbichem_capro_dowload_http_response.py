@@ -61,24 +61,16 @@ def orbichem_capro_download_http_response():
         with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
             host = data["Values"]["SYNAPSE_INSTANCE"]
-            orbichem_uid = data["Values"]["ORBICHEM_UID"]
-            orbichem_pw = data["Values"]["ORBICHEM_PW"]
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-            storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-            storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
 
     except FileNotFoundError or FileNotFoundError or KeyError:
         host = os.environ["SYNAPSE_INSTANCE"]
-        orbichem_uid = os.environ["ORBICHEM_UID"]
-        orbichem_pw = os.environ["ORBICHEM_PW"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-        storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
-        storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
 
     try:
     # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
     # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        orb = pull_orbichem.orbichem_capro(host, orbichem_uid, orbichem_pw, storage_account_key_for_synapse, storage_account_name_for_synapse)
+        orb = pull_orbichem.orbichem_capro(host)
         orb.main_capro()
     
     except Exception as e:

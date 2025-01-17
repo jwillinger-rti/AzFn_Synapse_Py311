@@ -21,6 +21,9 @@ import logging, pathlib as path
 import datetime
 import pandas as pd
 import sqlalchemy as sa
+import azure.identity
+from azure.keyvault.secrets import SecretClient
+from azure.core import exceptions
 from sqlalchemy.orm.session import sessionmaker
 try: import eia.src.azsynapse as azsyn
 except ModuleNotFoundError: import azsynapse as azsyn
@@ -31,11 +34,28 @@ GINP = "EPXXX2"
 
 class eiaapi():
 
-    def __init__(self, host, eia_key):
+    def __init__(self, host):
         def _define_datasets():
             dataset=[{"process":YUP}, {"process":YRL}, {"product":GINP}]
             return dataset
         
+        try:
+            with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
+                data = json.load(f)
+                kv_env = data["Values"]["KEYVAULT_ENV"]
+                b_is_local = data["Values"]["IS_RUNNING_LOCALLY"]
+        except FileNotFoundError or FileNotFoundError or KeyError:
+            kv_env = os.environ["KEYVAULT_ENV"]
+            b_is_local = os.environ["IS_RUNNING_LOCALLY"]
+
+        if b_is_local:
+            az_credential = azure.identity.AzureCliCredential()
+        else: 
+            az_credential = azure.identity.DefaultAzureCredential()
+        secret_client = SecretClient(vault_url=f"https://rti-rspaciq-kv{kv_env}.vault.azure.net",
+                                        credential=az_credential)
+        eia_key = secret_client.get_secret("EIA-API-KEY")
+
         self.base_url = "https://api.eia.gov/v2/petroleum/"
         self.dataset = _define_datasets()
         self.host = host
@@ -144,7 +164,7 @@ class eiaapi():
 
         # Entry:
         # ``````
-        responses_dict = _execute_calls_get_objects(eia_key=self.eia_key)
+        responses_dict = _execute_calls_get_objects(eia_key=self.eia_key.value)
         df_dict = {}
         for k in responses_dict:
             response_object = responses_dict[k]
@@ -228,10 +248,10 @@ class eiaapi():
         self.upload_eia_data(host=self.host, df=self.get_data())
 
 if __name__ == "__main__":
-    PROJECT_DIR = path.Path(__file__).parent.parent
+    PROJECT_DIR = path.Path(__file__).parent.parent.parent
     with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
         data = json.load(f)
         host = data["Values"]["SYNAPSE_INSTANCE"]
-        eia_key = data["Values"]["EIA_API_KEY"]
-    eia = eiaapi(host, eia_key)
+    
+    eia = eiaapi(host)
     eia.main()
