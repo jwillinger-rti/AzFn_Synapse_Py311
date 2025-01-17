@@ -62,7 +62,7 @@ def eia_download_http_reponse():
     except FileNotFoundError or FileNotFoundError or KeyError:
         host = os.environ["SYNAPSE_INSTANCE"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
-
+    
     try:
         # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
         # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD

@@ -48,8 +48,8 @@ class eiaapi():
         except FileNotFoundError or FileNotFoundError or KeyError:
             kv_env = os.environ["KEYVAULT_ENV"]
             b_is_local = os.environ["IS_RUNNING_LOCALLY"]
-
-        if b_is_local:
+        
+        if b_is_local == True:
             az_credential = azure.identity.AzureCliCredential()
         else: 
             az_credential = azure.identity.DefaultAzureCredential()
