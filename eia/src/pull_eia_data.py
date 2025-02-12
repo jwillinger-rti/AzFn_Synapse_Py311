@@ -156,7 +156,7 @@ class eiaapi():
             datetime_friday = _return_most_recent_friday__from_date(datetime.datetime.today()); datestr_friday = datetime_friday.strftime("%Y-%m-%d")
             datetime_prev_friday = datetime_friday - datetime.timedelta(days=7); datestr_prev_friday = datetime_prev_friday.strftime("%Y-%m-%d")
             merge_columns.append("percent-utilization")
-            df_eia_fil = df_eia[(df_eia["period"]==datetime_friday) & (df_eia["area-name"].isin(area_names))][merge_columns]
+            df_eia_fil = df_eia[(df_eia["period"]==datestr_friday) & (df_eia["area-name"].isin(area_names))][merge_columns]
             if df_eia_fil.empty:
                 df_eia_fil = df_eia[(df_eia["period"]==datestr_prev_friday) & (df_eia["area-name"].isin(area_names))][merge_columns]
             df_eia_fil.reset_index(drop=True, inplace=True)

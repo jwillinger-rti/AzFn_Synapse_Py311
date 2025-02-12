@@ -38,6 +38,7 @@ class orbichem_capro():
         orbichem_uid = secret_client.get_secret("ORBICHEM-UID")
         orbichem_pw = secret_client.get_secret("ORBICHEM-PW")
 
+
         # URLs
         self.capro_login_url = "https://orbichem360.orbichem.com/auth/signin?from_page=/"
         self.capro_url = "https://orbichem360.orbichem.com/price/monitor/get_price_data"

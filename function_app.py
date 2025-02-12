@@ -16,8 +16,8 @@ from orbichem.src import orbichem_capro_download_http_response as orb_capro
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 # CME:
-@app.route(route="cme_dowload_http_response")
-def cme_dowload_http_response(req: func.HttpRequest) -> func.HttpResponse:
+@app.route(route="cme_download_http_response")
+def cme_download_http_response(req: func.HttpRequest) -> func.HttpResponse:
 
     logging.info("Python HTTP trigger function processed a request.")
     name = req.params.get("name")
@@ -98,7 +98,7 @@ def acc_download_http_response(req: func.HttpRequest) -> func.HttpResponse:
         )
 
 # ORB - Capro:
-@app.route(route="orbichem_capro_dowload_http_response")
+@app.route(route="orbichem_capro_download_http_response")
 def orbichem_capro_download_http_response(req: func.HttpRequest) -> func.HttpResponse:
 
     logging.info("Python HTTP trigger function processed a request.")
