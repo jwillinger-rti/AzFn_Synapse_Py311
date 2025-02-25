@@ -37,7 +37,7 @@ def get_and_config_logger(log_file):
 def upload_log_to_blob(logger, temp_file_name, adls_conn_string):
 
     container_name = "synapse-fn-logs"
-    blob_name = f"{logger.name}_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"    
+    blob_name = f"{logger.name}_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
     adls_svc_client = BlobServiceClient.from_connection_string(adls_conn_string)
     container_client = adls_svc_client.get_container_client(container_name)
     blob_client = container_client.get_blob_client(blob_name)

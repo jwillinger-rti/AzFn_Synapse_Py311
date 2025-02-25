@@ -124,7 +124,7 @@ class CMEDatamineAPI:
                 # Write header, csv style:
                 with tempfile.NamedTemporaryFile(prefix="output-", suffix=".txt", mode='a', delete=False) as temp_file:
                     temp_file_path = temp_file.name
-
+                
                 with open(file_path, 'r') as infile, open(temp_file_path, 'w') as outfile:
                     columns = ["MTH_STRIKE", "DAILY_OPEN", "DAILY_HIGH", "DAILY_LOW", "DAILY_LAST", 
                                "SETT", "PNT_CHGE", "ACT_EST_VOL", "PREV_DAY_SETT", "PREV_DAY_VOL", "PREV_DAY_INT"]
