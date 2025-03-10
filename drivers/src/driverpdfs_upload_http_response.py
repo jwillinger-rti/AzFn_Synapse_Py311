@@ -55,7 +55,7 @@ def upload_log_to_blob(logger, temp_file_name, adls_conn_string):
             new_content = existing_content + temp_file.read()
         blob_client.upload_blob(data=new_content, overwrite=True)
 
-def driverspdf_download_http_response():
+def driverspdf_upload_http_response():
     func_name = inspect.currentframe().f_code.co_name
     logger, temp_file_name = get_and_config_logger(func_name)
     
@@ -81,11 +81,11 @@ def driverspdf_download_http_response():
         logger.info("run successful. \n")
         b_success = True
     
-    # upload_log_to_blob(logger, temp_file_name, adls_conn_string)
+    upload_log_to_blob(logger, temp_file_name, adls_conn_string)
     
     return b_success
 
 
 if __name__ == "__main__":
 
-    driverspdf_download_http_response()
+    driverspdf_upload_http_response()

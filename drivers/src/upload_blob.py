@@ -17,8 +17,6 @@ import inspect, json
 from azure.storage.blob import BlobServiceClient, ContentSettings, BlobClient, BlobType
 import azure.identity
 from azure.keyvault.secrets import SecretClient
-try: import drivers.src.connections as conn
-except ModuleNotFoundError: import connections as conn
 try: import drivers.src.azsql as azsql
 except ModuleNotFoundError: import azsql
 try: import drivers.src.process_pdf as proc_pdf
@@ -43,7 +41,7 @@ class driver_pdfs():
             kv_env = os.environ["KEYVAULT_ENV"]
             storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
             storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
-            sql_db_name = data["Values"]["AzureSQLDB"]
+            sql_db_name = os.environ["AzureSQLDB"]
             b_is_local = os.environ["IS_RUNNING_LOCALLY"]
 
         if b_is_local == True:
@@ -91,7 +89,7 @@ class driver_pdfs():
             timeout = "30"
             
             az_sqldb = azsql.AzureSQLDBInstance(driver=driver, host=host, 
-                port=port, database=database, timeout=timeout, uid="", pwd="", force_sqlauth=False)
+                port=port, database=database, timeout=timeout, uid=self.azsqldriver_uid, pwd=self.azsqldriver_pw, force_sqlauth=True)
             
             az_sqldb.close_connection
         else:

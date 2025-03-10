@@ -18,7 +18,8 @@ import struct, datetime
 import pyodbc, sqlalchemy as sa
 from sqlalchemy.orm import DeclarativeBase, session, sessionmaker, mapped_column
 from azure import identity
-import connections as conn
+try: import drivers.src.connections as conn
+except ModuleNotFoundError: import connections as conn
 
 class AzureSQLDBInstance():
 
