@@ -16,8 +16,8 @@ import pandas as pd, numpy as np
 import inspect, json
 from azure.storage.blob import BlobServiceClient, ContentSettings, BlobClient, BlobType
 import azure.identity
-from azure.keyvault.secrets import SecretClient
-import upload_blob as upb
+try: import drivers.src.upload_blob as upb
+except ModuleNotFoundError: import upload_blob as upb
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 

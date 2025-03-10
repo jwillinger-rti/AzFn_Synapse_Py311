@@ -17,9 +17,13 @@ import inspect, json
 from azure.storage.blob import BlobServiceClient, ContentSettings, BlobClient, BlobType
 import azure.identity
 from azure.keyvault.secrets import SecretClient
-import connections as conn
-import azsql
-import process_pdf as proc_pdf
+try: import drivers.src.connections as conn
+except ModuleNotFoundError: import connections as conn
+try: import drivers.src.azsql as azsql
+except ModuleNotFoundError: import azsql
+try: import drivers.src.process_pdf as proc_pdf
+except ModuleNotFoundError: import process_pdf as proc_pdf
+
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
@@ -33,11 +37,13 @@ class driver_pdfs():
                 kv_env = data["Values"]["KEYVAULT_ENV"]
                 storage_account_key_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
                 storage_account_name_for_synapse = data["Values"]["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+                sql_db_name = data["Values"]["AzureSQLDB"]
                 b_is_local = data["Values"]["IS_RUNNING_LOCALLY"]
         except FileNotFoundError or KeyError:
             kv_env = os.environ["KEYVAULT_ENV"]
             storage_account_key_for_synapse = os.environ["ADLS_STORAGEACCOUNTKEY_FORSYNAPSE"]
             storage_account_name_for_synapse = os.environ["ADLS_STORAGEACCOUNTNAME_FORSYNAPSE"]
+            sql_db_name = data["Values"]["AzureSQLDB"]
             b_is_local = os.environ["IS_RUNNING_LOCALLY"]
 
         if b_is_local == True:
@@ -48,6 +54,7 @@ class driver_pdfs():
                                         credential=az_credential)
         self.azsqldriver_uid = secret_client.get_secret("AZSQLDriverUID").value
         self.azsqldriver_pw = secret_client.get_secret("AZSQLDriverPW").value
+        self.sql_db_name = sql_db_name
         self.adls_conn_string = secret_client.get_secret("adls-conn-string-key01").value
         self.storage_account_name_for_synapse = storage_account_name_for_synapse
         self.storage_account_key_for_synapse = storage_account_key_for_synapse 
@@ -80,7 +87,7 @@ class driver_pdfs():
             driver = "{ODBC Driver 18 for SQL Server}"
             port = 1433
             host = "rtiglobal.database.windows.net"
-            database = "RTiWeb-DEV"
+            database = self.sql_db_name
             timeout = "30"
             
             az_sqldb = azsql.AzureSQLDBInstance(driver=driver, host=host, 
@@ -90,7 +97,7 @@ class driver_pdfs():
         else:
             az_sqldb.close_connection
         return az_sqldb
-
+    
     def upload_drivers(self, df, az_sqldb):
 
         def _execute_upsert(az_sqldb, df, tbl, pk):
