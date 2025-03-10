@@ -34,7 +34,7 @@ def check_file_encoding(input_file_path):
             with open(input_file_path, 'r', encoding="latin-1") as f:
                 content = f.read()
                 ret = "latin-1"
-        except UnicodeDecodeError:
+        except Exception:
             print("Error: Could not decode file with Latin-1 encoding either.")
     return ret
 
@@ -194,11 +194,12 @@ def process_pdf_return_data(input_file, output_file, pdf_Name):
                     if (len(pages)-len(headers)) > 1: headers.append(header_contact)
                     header_contact = ""; header = ""; b_header = False # reset
 
-
-                if b_get_page_header_data: header, header_contact, b_header = __process_header(line, header, header_contact)
-                if b_get_page_date_data: date, b_date = __process_date(line, date, b_date)
-                page, b_page = __process_page(line, page)
-
+                try:
+                    if b_get_page_header_data: header, header_contact, b_header = __process_header(line, header, header_contact)
+                    if b_get_page_date_data: date, b_date = __process_date(line, date, b_date)
+                    page, b_page = __process_page(line, page)
+                except Exception: pass
+                
                 if b_header:
                     headers.append(header)
                     header=""; b_header = False
