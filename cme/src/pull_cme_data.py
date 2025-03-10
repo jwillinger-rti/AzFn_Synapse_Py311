@@ -193,7 +193,7 @@ class CMEDatamineAPI:
                 total=4,  # Maximum number of retries.
                 status_forcelist=[429, 500, 502, 503, 504],  # the HTTP status codes to retry on.
             )
-
+            
             adapter = HTTPAdapter(max_retries=retry_strategy)
             
             # Create a new session object.

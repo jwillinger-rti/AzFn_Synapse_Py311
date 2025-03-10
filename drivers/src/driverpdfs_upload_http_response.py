@@ -1,26 +1,29 @@
-from azure.storage.blob import BlobServiceClient
-from azure.storage.blob import ContentSettings
-from azure.identity import DefaultAzureCredential
-from azure.core import exceptions
-import logging, os, sys
+####################################
+# Author: Jon Willinger
+# Date: 2025-02-14
+# Notes: 
+####################################
+
+import os, csv, re
+import logging
 import pathlib as path
-import inspect, json
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 import datetime, tempfile
-try: import cme.src.pull_cme_data as pull_cme
-except ModuleNotFoundError: import pull_cme_data as pull_cme
+from sqlalchemy.orm import sessionmaker
+import sqlalchemy as sa
+import pandas as pd, numpy as np
+import inspect, json
+from azure.storage.blob import BlobServiceClient, ContentSettings, BlobClient, BlobType
+import azure.identity
+from azure.keyvault.secrets import SecretClient
+import upload_blob as upb
 
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
+
 def get_and_config_logger(log_file):
 
-    # log_dir = os.path.join(path.Path(__file__).parent.parent.resolve()
-    # os.makedirs(log_dir, exist_ok=True)
-    # logger = logging.getLogger(__name__)
-    # logger.setLevel(logging.INFO)
-    # handler = logging.StreamHandler(stream=sys.stdout)
-    # formatter = logging.Formatter(fmt='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s')
-    # handler.setFormatter(formatter)
-    # logger.addHandler(handler)
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     with tempfile.NamedTemporaryFile(mode='a', delete=False) as temp_file:
@@ -30,7 +33,7 @@ def get_and_config_logger(log_file):
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-
+    
     return logger, temp_file_name
 
 def upload_log_to_blob(logger, temp_file_name, adls_conn_string):
@@ -52,24 +55,24 @@ def upload_log_to_blob(logger, temp_file_name, adls_conn_string):
             new_content = existing_content + temp_file.read()
         blob_client.upload_blob(data=new_content, overwrite=True)
 
-def cme_download_http_reponse():
+def driverspdf_download_http_response():
     func_name = inspect.currentframe().f_code.co_name
     logger, temp_file_name = get_and_config_logger(func_name)
     
     try:
         with open(os.path.join(PROJECT_DIR,"local.settings.json")) as f:
             data = json.load(f)
-            host = data["Values"]["SYNAPSE_INSTANCE"]
             adls_conn_string = data["Values"]["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
+    
     except FileNotFoundError or KeyError:
-        host = os.environ["SYNAPSE_INSTANCE"]
         adls_conn_string = os.environ["WEBSITE_CONTENTAZUREFILECONNECTIONSTRING"]
     
     try:
-        # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
-        # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        # pull_cme.main(host1)
-        pull_cme.main(host)
+    # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
+    # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
+        driver = upb.driver_pdfs()
+        driver.main()
+    
     except Exception as e:
         logger.error(e)
         logger.error("run failed. \n")
@@ -78,9 +81,11 @@ def cme_download_http_reponse():
         logger.info("run successful. \n")
         b_success = True
     
-    upload_log_to_blob(logger, temp_file_name, adls_conn_string)
-
+    # upload_log_to_blob(logger, temp_file_name, adls_conn_string)
+    
     return b_success
 
+
 if __name__ == "__main__":
-    cme_download_http_reponse()
+
+    driverspdf_download_http_response()
