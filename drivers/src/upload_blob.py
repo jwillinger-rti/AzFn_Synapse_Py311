@@ -180,6 +180,8 @@ class driver_pdfs():
             # Check if in table: decide upsert:
             
             pk = int(df["documentId"].iloc[0])
+            try: pdfName = str(df["pdfName"].iloc[0])
+            except: pdfName = "nan"
             tbl = self.TBL_METADATA_DRIVER_HISTORICAL
             df_ins = df
             Session = sessionmaker(az_sqldb.engine)
@@ -188,7 +190,8 @@ class driver_pdfs():
                 # Simple delete.
                 # logger.info(df_up.to_dict(orient="records"))
                 session.connection().execute(sa.delete(tbl).where(tbl.documentId.in_([pk])))
-                
+                session.connection().execute(sa.delete(tbl).where(tbl.pdfName.in_([pdfName]))) # Just ensure.
+
                 # Simple insert.
                 sql_stmt_string = sa.insert(tbl).values(df_ins.to_dict(orient="records")).compile(
                     dialect=sa.dialects.mssql.pyodbc.dialect(),

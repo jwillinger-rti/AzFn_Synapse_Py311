@@ -10,7 +10,7 @@ except ModuleNotFoundError: import pull_eia_data as pull_eia
 PROJECT_DIR = path.Path(__file__).parent.parent.parent
 
 def get_and_config_logger(log_file):
-
+    
     # log_dir = os.path.join(path.Path(__file__).parent.parent.resolve()
     # os.makedirs(log_dir, exist_ok=True)
     # logger = logging.getLogger(__name__)
@@ -66,8 +66,9 @@ def eia_download_http_reponse():
     try:
         # host1 = "rti-synapse-db.sql.azuresynapse.net" # SBX
         # host2 = "rti-synapse-pd.sql.azuresynapse.net" # PRD
-        eia = pull_eia.eiaapi(host)
-        eia.main()
+        eia = pull_eia.eiaapi_refineryrates(host)
+        eia.refineryrates_main(route="/petroleum")
+
     except Exception as e:
         logger.error(e)
         logger.error("run failed. \n")

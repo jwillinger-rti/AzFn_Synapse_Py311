@@ -306,7 +306,7 @@ class acc():
             
             # Assuming `file_response.content` contains the bytes of the Excel file
             blob_client.upload_blob(file_response.content, overwrite=True)
-
+            
             # Download the Excel file from Blob Storage
             with tempfile.NamedTemporaryFile(prefix="acc_scrape_output", suffix=".xlsx", mode='a', delete=False) as temp_file:
                 temp_file_name = temp_file.name
